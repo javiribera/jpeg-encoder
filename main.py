@@ -16,17 +16,18 @@ import functools
 import itertools
 import math
 
-# from ipdb import set_trace as debug
 import numpy as np
+import cv2 as cv
 
 import utils
 
-import cv2 as cv
+
+from ipdb import set_trace as debug
 
 
 def approximate_mono_image(img, num_coeffs, blocksize=8):
     """
-    Approximates the image by using only the first coefficients of the DCT.
+    Approximates a single channel image by using only the first coefficients of the DCT.
      First, the image is chopped into squared patches. Then the DCT is applied to each patch and only the K coefficients
      that correspond to the upper left corner of the 2D DCT basis are kept.
      Finally, only these coefficients are used to approximate the original patches with the IDCT, and the image is
@@ -37,13 +38,17 @@ def approximate_mono_image(img, num_coeffs, blocksize=8):
     :return: The approximated image.
     """
 
+    # prevent against multiple-channel images
+    if len(img.shape) != 2:
+        raise ValueError('Input image must be a single channel 2D array')
+
     # shape of image
     height = img.shape[0]
     width = img.shape[1]
-    if (height % 8 != 0) or (width % 8 != 0):
-        raise ValueError("Image 'img' dimensions are not multiple of 8 pixels")
+    if (height % blocksize != 0) or (width % blocksize != 0):
+        raise ValueError("Image dimensions are not multiple of the blocksize")
 
-    # split in blocksize x blocksize pixels blocks
+    # split into blocksize x blocksize pixels blocks
     img_blocks = [img[j:j + blocksize, i:i + blocksize]
                   for (j, i) in itertools.product(range(0, height, blocksize),
                                                   range(0, width, blocksize))]
@@ -100,11 +105,15 @@ if __name__ == '__main__':
     # compress and decompress every channel separately
     rec_img = np.empty_like(img)
     for channel_num in xrange(3):
-        mono_image = approximate_mono_image(img_ycc[:, :, channel_num], num_coeffs=args.num_coeffs)
+        mono_image = approximate_mono_image(img_ycc[:, :, channel_num],
+                                            num_coeffs=args.num_coeffs,
+                                            blocksize=args.blocksize)
         rec_img[:, :, channel_num] = mono_image
 
-    # convert back to RGB for visualization
+    # convert back to RGB
     rec_img_rgb = cv.cvtColor(np.uint8(rec_img), code=cv.cv.CV_YCrCb2BGR, dstCn=3)
+
+    # visualize
     cv.imshow('', rec_img_rgb)
     while True:
         cv.waitKey(33)
