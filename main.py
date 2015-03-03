@@ -38,7 +38,7 @@ def main():
 
     # read image
     img = cv.imread(args.image_path, cv.CV_LOAD_IMAGE_COLOR)
-    img = np.float64(img) / 255
+    img = np.float32(img) / 255
 
     # get YCC components
     img_ycc = cv.cvtColor(img, code=cv.cv.CV_BGR2YCrCb, dstCn=3)
