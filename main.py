@@ -9,12 +9,14 @@ This script depends on the following external Python Packages:
 - argparse, to parse command line arguments
 - OpenCV, for the DCT and I/O of images
 - numpy, to speed up array manipulation
+- scikit-image, for
 """
 
 import argparse
 import functools
 import itertools
 import math
+from skimage.measure import structural_similarity as compute_ssim
 
 import numpy as np
 import cv2 as cv
@@ -37,8 +39,8 @@ def main():
     args = parser.parse_args()
 
     # read image
-    img = cv.imread(args.image_path, cv.CV_LOAD_IMAGE_COLOR)
-    img = np.float32(img) / 255
+    orig_img = cv.imread(args.image_path, cv.CV_LOAD_IMAGE_COLOR)
+    img = np.float32(orig_img) / 255
 
     # get YCC components
     img_ycc = cv.cvtColor(img, code=cv.cv.CV_BGR2YCrCb, dstCn=3)
@@ -57,8 +59,17 @@ def main():
     # round to the nearest integer [0,255] value
     rec_img_rgb = np.uint8(np.round(rec_img_rgb * 255))
 
+    # show PSNR and SSIM of the approximation
+    err_img = abs(np.array(rec_img_rgb, dtype=float) - np.array(orig_img, dtype=float))
+    mse = (err_img ** 2).mean()
+    psnr = 10 * math.log10((255 ** 2) / mse)
+    ssim = compute_ssim(cv.cvtColor(np.float32(rec_img_rgb), code=cv.cv.CV_BGR2GRAY),
+                        cv.cvtColor(np.float32(orig_img), code=cv.cv.CV_BGR2GRAY))
+    print 'PSNR: %s dB' % psnr
+    print 'SSIM: %s' % ssim
+
     # visualize
-    cv.imshow('', rec_img_rgb)
+    cv.imshow('', err_img)
     while True:
         cv.waitKey(33)
 
