@@ -51,11 +51,11 @@ def main():
                                             blocksize=args.blocksize)
         rec_img[:, :, channel_num] = mono_image
 
-    # round to the nearest integer [0,255] value
-    rec_img = np.uint8(np.round(rec_img * 255))
-
     # convert back to RGB
     rec_img_rgb = cv.cvtColor(rec_img, code=cv.cv.CV_YCrCb2BGR, dstCn=3)
+
+    # round to the nearest integer [0,255] value
+    rec_img_rgb = np.uint8(np.round(rec_img_rgb * 255))
 
     # visualize
     cv.imshow('', rec_img_rgb)
