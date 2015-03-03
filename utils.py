@@ -2,10 +2,10 @@ import argparse
 import numpy as np
 import math
 
-def power_of_two(number, max=np.inf):
+def perfect_square(number, max=np.inf):
     """
-    Convert a number to a power of two, below a given maximum number.
-    :param number: The number to be converted to a power of two.
+    Convert a number to a perfect square, below a given maximum number, if possible.
+    :param number: The number to be converted to a perfect square.
     :param max: Maximum number the input number should be.
     :return: The positive integer.
     :raise: argparse.ArgumentTypeError if not able to do the conversion.
@@ -13,13 +13,13 @@ def power_of_two(number, max=np.inf):
     try:
         number_float = float(number)
 
-        if int(math.log(number_float, 2)) == math.log(number_float, 2) \
+        if int(math.sqrt(number_float)) == math.sqrt(number_float) \
                 and 0 < number_float <= max:
             return int(number_float)
         else:
             raise ValueError
     except ValueError:
-        raise argparse.ArgumentTypeError('%s is not a power of two <= %s' % (number, max))
+        raise argparse.ArgumentTypeError('%s is not a perfect square <= %s' % (number, max))
 
 
 def chunks(l, n):

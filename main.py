@@ -9,7 +9,7 @@ This script depends on the following external Python Packages:
 - argparse, to parse command line arguments
 - OpenCV, for the DCT and I/O of images
 - numpy, to speed up array manipulation
-- scikit-image, for
+- scikit-image, for SSIM computation
 """
 
 import argparse
@@ -32,7 +32,7 @@ def main():
     parser.add_argument('--input', dest='image_path', required=True, type=str,
                         help='Path to the image to be analyzed.')
     parser.add_argument('--coeffs', dest='num_coeffs', required=True,
-                        type=functools.partial(utils.power_of_two, max=64),
+                        type=functools.partial(utils.perfect_square, max=np.inf),
                         help='Number of coefficients that will be used to reconstruct the original image. 64 max.')
     parser.add_argument('--blocksize', dest='blocksize', type=int, default=8,
                         help='Length of the sides of the blocks the input image will be cut into.')
@@ -109,8 +109,8 @@ def approximate_mono_image(img, num_coeffs, blocksize=8):
     reduced_dct_coeffs = []
     for dct_block in dct_blocks:
         some_dct_coeffs = np.zeros_like(dct_block)
-        logg = math.log(num_coeffs, 2)
-        some_dct_coeffs[0:logg, 0:logg] = dct_block[0:logg, 0:logg]
+        sqrt = math.sqrt(num_coeffs)
+        some_dct_coeffs[0:sqrt, 0:sqrt] = dct_block[0:sqrt, 0:sqrt]
         reduced_dct_coeffs.append(some_dct_coeffs)
 
     # IDCT of every block
