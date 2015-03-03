@@ -11,11 +11,11 @@ def power_of_two(number, max=np.inf):
     :raise: argparse.ArgumentTypeError if not able to do the conversion.
     """
     try:
-        number = float(number)
+        number_float = float(number)
 
-        if int(math.log(number, 2)) == math.log(number, 2) \
-                and 0 < number <= max:
-            return int(number)
+        if int(math.log(number_float, 2)) == math.log(number_float, 2) \
+                and 0 < number_float <= max:
+            return int(number_float)
         else:
             raise ValueError
     except ValueError:
