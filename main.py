@@ -69,7 +69,7 @@ def main():
     print 'SSIM: %s' % ssim
 
     # visualize
-    cv.imshow('', err_img)
+    cv.imshow('Approximation image', rec_img_rgb)
     while True:
         cv.waitKey(33)
 
