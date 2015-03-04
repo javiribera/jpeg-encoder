@@ -13,7 +13,6 @@ This script depends on the following external Python Packages:
 """
 
 import argparse
-import functools
 import itertools
 import math
 from skimage.measure import structural_similarity as compute_ssim
@@ -32,14 +31,12 @@ def main():
     parser.add_argument('--input', dest='image_path', required=True, type=str,
                         help='Path to the image to be analyzed.')
     parser.add_argument('--coeffs', dest='num_coeffs', required=True, type=int,
-                        help='Number of coefficients that will be used to reconstruct the original image. 64 max.')
-    parser.add_argument('--blocksize', dest='blocksize', type=int, default=8,
-                        help='Length of the sides of the blocks the input image will be cut into.')
+                        help='Number of coefficients that will be used to reconstruct the original image.')
     args = parser.parse_args()
 
     # read image
     orig_img = cv.imread(args.image_path, cv.CV_LOAD_IMAGE_COLOR)
-    img = np.float32(orig_img) / 255
+    img = np.float32(orig_img)
 
     # get YCC components
     img_ycc = cv.cvtColor(img, code=cv.cv.CV_BGR2YCrCb, dstCn=3)
@@ -48,15 +45,14 @@ def main():
     rec_img = np.empty_like(img)
     for channel_num in xrange(3):
         mono_image = approximate_mono_image(img_ycc[:, :, channel_num],
-                                            num_coeffs=args.num_coeffs,
-                                            blocksize=args.blocksize)
+                                            num_coeffs=args.num_coeffs)
         rec_img[:, :, channel_num] = mono_image
 
     # convert back to RGB
     rec_img_rgb = cv.cvtColor(rec_img, code=cv.cv.CV_YCrCb2BGR, dstCn=3)
 
     # round to the nearest integer [0,255] value
-    rec_img_rgb = np.uint8(np.round(rec_img_rgb * 255))
+    rec_img_rgb = np.uint8(np.round(rec_img_rgb))
 
     # show PSNR and SSIM of the approximation
     err_img = abs(np.array(rec_img_rgb, dtype=float) - np.array(orig_img, dtype=float))
@@ -73,16 +69,15 @@ def main():
         cv.waitKey(33)
 
 
-def approximate_mono_image(img, num_coeffs, blocksize=8):
+def approximate_mono_image(img, num_coeffs):
     """
     Approximates a single channel image by using only the first coefficients of the DCT.
-     First, the image is chopped into squared patches.
+     First, the image is chopped into 8x8 pixels patches.
      Then the DCT is applied to each patch and only the first K DCT coefficients are kept.
      Finally, only these coefficients are used to approximate the original patches with the IDCT, and the image is
      reconstructed back again from these patches.
     :param img: Image to be approximated.
     :param num_coeffs: Number of DCT coefficients to use.
-    :param blocksize: Length of the sides of the blocks the input image will be cut into.
     :return: The approximated image.
     """
 
@@ -93,13 +88,13 @@ def approximate_mono_image(img, num_coeffs, blocksize=8):
     # shape of image
     height = img.shape[0]
     width = img.shape[1]
-    if (height % blocksize != 0) or (width % blocksize != 0):
-        raise ValueError("Image dimensions are not multiple of the blocksize")
+    if (height % 8 != 0) or (width % 8 != 0):
+        raise ValueError("Image dimensions (%s, %s) must be multiple of 8" %(height, width))
 
-    # split into blocksize x blocksize pixels blocks
-    img_blocks = [img[j:j + blocksize, i:i + blocksize]
-                  for (j, i) in itertools.product(xrange(0, height, blocksize),
-                                                  xrange(0, width, blocksize))]
+    # split into 8 x 8 pixels blocks
+    img_blocks = [img[j:j + 8, i:i + 8]
+                  for (j, i) in itertools.product(xrange(0, height, 8),
+                                                  xrange(0, width, 8))]
 
     # DCT transform every 8x8 block
     dct_blocks = [cv.dct(img_block) for img_block in img_blocks]
@@ -112,8 +107,8 @@ def approximate_mono_image(img, num_coeffs, blocksize=8):
 
     # reshape the reconstructed image blocks
     rec_img = []
-    for chunk_row_blocks in utils.chunks(rec_img_blocks, width / blocksize):
-        for row_block_num in xrange(blocksize):
+    for chunk_row_blocks in utils.chunks(rec_img_blocks, width / 8):
+        for row_block_num in xrange(8):
             for block in chunk_row_blocks:
                 rec_img.extend(block[row_block_num])
     rec_img = np.array(rec_img).reshape(height, width)
