@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--coeffs', dest='num_coeffs', required=False, type=int,
                         help='Number of coefficients that will be used to reconstruct the original image, '
                              'without quantization.')
-    parser.add_argument('--scale-factor', dest='scale_factor', required=False, type=int, default=1,
+    parser.add_argument('--scale-factor', dest='scale_factor', required=False, type=float, default=1,
                         help='Scale factor for the quantization step (the higher, the more quantization loss).')
     args = parser.parse_args()
 
