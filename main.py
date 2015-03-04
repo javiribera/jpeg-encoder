@@ -57,7 +57,9 @@ def main():
     rec_img_rgb = cv.cvtColor(rec_img, code=cv.cv.CV_YCrCb2BGR)
 
     # round to the nearest integer [0,255] value
-    rec_img_rgb = np.uint8(np.round(rec_img_rgb))
+    rec_img_rgb[rec_img_rgb < 0] = 0
+    rec_img_rgb[rec_img_rgb > 255] = 255
+    rec_img_rgb = np.uint8(rec_img_rgb)
 
     # show PSNR and SSIM of the approximation
     err_img = abs(np.array(rec_img_rgb, dtype=float) - np.array(orig_img, dtype=float))
