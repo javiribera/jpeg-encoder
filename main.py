@@ -31,8 +31,7 @@ def main():
                                                  'of its 8x8 DCT.')
     parser.add_argument('--input', dest='image_path', required=True, type=str,
                         help='Path to the image to be analyzed.')
-    parser.add_argument('--coeffs', dest='num_coeffs', required=True,
-                        type=functools.partial(utils.perfect_square, max=np.inf),
+    parser.add_argument('--coeffs', dest='num_coeffs', required=True, type=int,
                         help='Number of coefficients that will be used to reconstruct the original image. 64 max.')
     parser.add_argument('--blocksize', dest='blocksize', type=int, default=8,
                         help='Length of the sides of the blocks the input image will be cut into.')
@@ -77,12 +76,12 @@ def main():
 def approximate_mono_image(img, num_coeffs, blocksize=8):
     """
     Approximates a single channel image by using only the first coefficients of the DCT.
-     First, the image is chopped into squared patches. Then the DCT is applied to each patch and only the K coefficients
-     that correspond to the upper left corner of the 2D DCT basis are kept.
+     First, the image is chopped into squared patches.
+     Then the DCT is applied to each patch and only the first K DCT coefficients are kept.
      Finally, only these coefficients are used to approximate the original patches with the IDCT, and the image is
      reconstructed back again from these patches.
     :param img: Image to be approximated.
-    :param num_coeffs: Number of DCT coefficients to use (the upper left corner).
+    :param num_coeffs: Number of DCT coefficients to use.
     :param blocksize: Length of the sides of the blocks the input image will be cut into.
     :return: The approximated image.
     """
@@ -99,19 +98,14 @@ def approximate_mono_image(img, num_coeffs, blocksize=8):
 
     # split into blocksize x blocksize pixels blocks
     img_blocks = [img[j:j + blocksize, i:i + blocksize]
-                  for (j, i) in itertools.product(range(0, height, blocksize),
-                                                  range(0, width, blocksize))]
+                  for (j, i) in itertools.product(xrange(0, height, blocksize),
+                                                  xrange(0, width, blocksize))]
 
     # DCT transform every 8x8 block
     dct_blocks = [cv.dct(img_block) for img_block in img_blocks]
 
-    # keep only the upper left KxK corner of the DCT coefficients of every block
-    reduced_dct_coeffs = []
-    for dct_block in dct_blocks:
-        some_dct_coeffs = np.zeros_like(dct_block)
-        sqrt = math.sqrt(num_coeffs)
-        some_dct_coeffs[0:sqrt, 0:sqrt] = dct_block[0:sqrt, 0:sqrt]
-        reduced_dct_coeffs.append(some_dct_coeffs)
+    # keep only the first K DCT coefficients of every block
+    reduced_dct_coeffs = [utils.zig_zag(dct_block, num_coeffs) for dct_block in dct_blocks]
 
     # IDCT of every block
     rec_img_blocks = [cv.idct(coeff_block) for coeff_block in reduced_dct_coeffs]
