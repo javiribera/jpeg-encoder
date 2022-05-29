@@ -7,3 +7,42 @@ This script is intended to be used solely for academic purposes:
 No subsamping us applied (4:4:4)
 
 More info: https://en.wikipedia.org/wiki/JPEG#JPEG_codec_example
+
+---
+
+## Requirements
+- Python3
+- Python3 pip
+- Python3 venv
+
+## Usage
+
+Create an environment to install the required pip3 packages
+
+```bash
+python3 -m venv env
+```
+
+Activate the environment
+
+```bash
+source env/bin/activate
+```
+
+Install the required packages
+
+```bash
+pip3 install -r requirements.txt
+```
+
+Run the script and pass an image as an argument
+
+```bash
+python3 main.py --input <path_to_image> --coeffs <number_of_coefficients>
+```
+
+### Example 
+
+```bash
+python3 main.py --input ~/Pictures/flowers.jpg --coeffs 16
+```

@@ -17,7 +17,7 @@ import argparse
 import itertools
 import math
 
-from skimage.measure import structural_similarity as compute_ssim
+from skimage.metrics import structural_similarity as compute_ssim
 import numpy as np
 import cv2 as cv
 
@@ -39,24 +39,22 @@ def main():
     args = parser.parse_args()
 
     # read image
-    orig_img = cv.imread(args.image_path, cv.CV_LOAD_IMAGE_COLOR)
+    orig_img = cv.imread(args.image_path, cv.IMREAD_COLOR)
     img = np.float32(orig_img)
 
     # get YCC components
-    img_ycc = cv.cvtColor(img, code=cv.cv.CV_BGR2YCrCb)
+    img_ycc = cv.cvtColor(img, code=cv.COLOR_BGR2YCrCb)
 
     # compress and decompress every channel separately
     rec_img = np.empty_like(img)
-    for channel_num in xrange(3):
+    for channel_num in range(3):
         mono_image = approximate_mono_image(img_ycc[:, :, channel_num],
                                             num_coeffs=args.num_coeffs,
                                             scale_factor=args.scale_factor)
         rec_img[:, :, channel_num] = mono_image
 
     # convert back to RGB
-    rec_img_rgb = cv.cvtColor(rec_img, code=cv.cv.CV_YCrCb2BGR)
-
-    # round to the nearest integer [0,255] value
+    rec_img_rgb = cv.cvtColor(rec_img, code=cv.COLOR_YCrCb2BGR)
     rec_img_rgb[rec_img_rgb < 0] = 0
     rec_img_rgb[rec_img_rgb > 255] = 255
     rec_img_rgb = np.uint8(rec_img_rgb)
@@ -65,10 +63,10 @@ def main():
     err_img = abs(np.array(rec_img_rgb, dtype=float) - np.array(orig_img, dtype=float))
     mse = (err_img ** 2).mean()
     psnr = 10 * math.log10((255 ** 2) / mse)
-    ssim = compute_ssim(cv.cvtColor(np.float32(rec_img_rgb), code=cv.cv.CV_BGR2GRAY),
-                        cv.cvtColor(np.float32(orig_img), code=cv.cv.CV_BGR2GRAY))
-    print 'PSNR: %s dB' % psnr
-    print 'SSIM: %s' % ssim
+    ssim = compute_ssim(cv.cvtColor(np.float32(rec_img_rgb), code=cv.COLOR_BGR2GRAY),
+                        cv.cvtColor(np.float32(orig_img), code=cv.COLOR_BGR2GRAY))
+    print('PSNR: %s dB' % psnr)
+    print('SSIM: %s' % ssim)
 
     # visualize
     cv.imshow('Approximation image', rec_img_rgb)
@@ -102,8 +100,8 @@ def approximate_mono_image(img, num_coeffs=None, scale_factor=1):
 
     # split into 8 x 8 pixels blocks
     img_blocks = [img[j:j + 8, i:i + 8]
-                  for (j, i) in itertools.product(xrange(0, height, 8),
-                                                  xrange(0, width, 8))]
+                  for (j, i) in itertools.product(range(0, height, 8),
+                                                  range(0, width, 8))]
 
     # DCT transform every 8x8 block
     dct_blocks = [cv.dct(img_block) for img_block in img_blocks]
@@ -126,7 +124,7 @@ def approximate_mono_image(img, num_coeffs=None, scale_factor=1):
     # reshape the reconstructed image blocks
     rec_img = []
     for chunk_row_blocks in utils.chunks(rec_img_blocks, width / 8):
-        for row_block_num in xrange(8):
+        for row_block_num in range(8):
             for block in chunk_row_blocks:
                 rec_img.extend(block[row_block_num])
     rec_img = np.array(rec_img).reshape(height, width)

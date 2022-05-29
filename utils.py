@@ -12,8 +12,8 @@ jpeg_quantiz_matrix = np.array([[16, 11, 10, 16, 24, 40, 51, 61],
 
 def chunks(l, n):
     """ Yield successive n-sized chunks from l """
-    for i in xrange(0, len(l), n):
-        yield l[i:i + n]
+    for i in range(0, len(l), int(n)):
+        yield l[i:i + int(n)]
 
 
 def zig_zag(array, n=None):
@@ -37,7 +37,7 @@ def zig_zag(array, n=None):
 
     (j, i) = (0, 0)
     direction = 'r'  # {'r': right, 'd': down, 'ur': up-right, 'dl': down-left}
-    for subel_num in xrange(1, n + 1):
+    for subel_num in range(1, n + 1):
         res[j][i] = array[j][i]
         if direction == 'r':
             i += 1
