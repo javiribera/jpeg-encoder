@@ -11,7 +11,7 @@ More info: https://en.wikipedia.org/wiki/JPEG#JPEG_codec_example
 ---
 
 ## Requirements
-- Python3
+- Python3. Tested with 3.9.12
 - Python3 pip
 - Python3 venv
 
